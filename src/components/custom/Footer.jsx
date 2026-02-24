@@ -46,7 +46,7 @@ function Footer({ footerRef }) {
         Safar &copy; 2025
       </p>
       <p className="text-sm md:text-base text-gray-500 dark:text-gray-500 mt-1">
-        Made by Nitya | All rights reserved.
+        Made by Anurag | All rights reserved.
       </p>
       {/* <p className="sm:font-semibold sm:text-lg  bg-gradient-to-b from-primary/90 to-primary/60 bg-clip-text text-transparent">
         Made by Satendra Kumar Parteti
