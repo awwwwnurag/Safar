@@ -18,7 +18,7 @@ function Header({headerRef}) {
   const { user, isAuthenticated, logout, loginWithPopup, loginWithRedirect } =
     useContext(LogInContext);
   const LogOut = () => {
-    logout();
+    logout({ logoutParams: { returnTo: window.location.origin } });
   };
   const LogIn = () => {
     // loginWithRedirect();

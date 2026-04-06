@@ -3,8 +3,8 @@
 
 export const config = {
   // Auth0 Configuration (Already filled)
-  VITE_DOMAIN_NAME: "dev-fc2h7xoczpv0m0tz.us.auth0.com",
-  VITE_AUTH0_CLIENT_ID: "gz8T6jEqm7UT4n1wI751BFqygAx0IPHN",
+  VITE_DOMAIN_NAME: "dev-q5wbcxuzlerglwix.us.auth0.com",
+  VITE_AUTH0_CLIENT_ID: "WG9X880i08qzMaGaGEwjRhzgg7aGHeJJ",
   
   // Google Maps API Key (Required for maps and location features)
   VITE_GOOGLE_MAP_API_KEY: "your-google-maps-api-key-here",

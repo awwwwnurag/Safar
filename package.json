@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "VITE_DOMAIN_NAME=your-auth0-domain VITE_AUTH0_CLIENT_ID=your-auth0-client-id VITE_GOOGLE_MAP_API_KEY=your-google-api-key VITE_GEMINI_API_KEY=your-gemini-api-key vite --host",
+    "dev": "VITE_DOMAIN_NAME=your-auth0-domain VITE_AUTH0_CLIENT_ID=your-auth0-client-id VITE_GOOGLE_MAP_API_KEY=your-google-api-key VITE_GEMINI_API_KEY=your-gemini-api-key vite --host --port 5173 --strictPort",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
