@@ -11,16 +11,14 @@ import {
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogInContext } from "@/Context/LogInContext/Login";
-import { getPlaceDetails, PHOTO_URL } from "@/Service/GlobalApi";
+import { getUnsplashPhotoUrl, getNominatimCoordinates } from "@/Service/GlobalApi";
 import { useCache } from "@/Context/Cache/CacheContext";
 
 function PlaceCards({ place }) {
   const { trip } = useContext(LogInContext);
   const itinerary = trip?.tripData?.itinerary;
-  const city = trip?.tripData?.location;
+  const city = trip?.tripData?.location || trip?.userSelection?.location || trip?.location;
 
-  const [placeDets, setPlaceDets] = useState([]);
-  const [photos, setPhotos] = useState("");
   const [Url, setUrl] = useState("");
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState("");
@@ -28,43 +26,36 @@ function PlaceCards({ place }) {
   const [rating, setRating] = useState(0);
   const [latitude, setLatitude] = useState(0);
   const [longitude, setLongitude] = useState(0);
-  const [placeId, setPlaceId] = useState("");
 
   const [currentPlace, setCurrentPlace] = useState(null);
 
   const { setSelectedPlace } = useCache();
 
   const getPlaceInfo = async () => {
-    const data = {
-      textQuery: place.name + city,
-    };
-
     try {
-      const result = await getPlaceDetails(data);
-      const place = result?.data?.places[0];
+      const imgUrl = await getUnsplashPhotoUrl(place.name + " " + city + " tourist attraction");
+      setUrl(imgUrl);
+
+      const geoResult = await getNominatimCoordinates(place.name + " " + city);
+
       let info = {
-        id: place.id,
-        lat: place.location.latitude,
-        lng: place.location.longitude,
-        name: place.displayName.text,
+        lat: geoResult ? geoResult.lat : 0,
+        lng: geoResult ? geoResult.lng : 0,
+        name: place.name,
         city: city,
-        address: place.formattedAddress,
-        rating: place.rating,
-        location: place.googleMapsUri,
-        photos: place.photos?.[0]?.name || null,
+        address: place.address || (geoResult ? geoResult.address : ""),
+        rating: place.rating || 4.5, // AI gives rating usually
+        location: geoResult ? `https://www.openstreetmap.org/?mlat=${geoResult.lat}&mlon=${geoResult.lng}#map=18/${geoResult.lat}/${geoResult.lng}` : "",
+        photos: imgUrl,
       };
 
-      setPlaceDets(place);
-      setPhotos(info.photos);
       setAddress(info.address);
       setLocation(info.location);
       setRating(info.rating);
       setLatitude(info.lat);
       setLongitude(info.lng);
-      setPlaceId(info.id);
 
       setCurrentPlace(info);
-      // console.log("Current Place:", info)
     } catch (err) {
       console.log("Error fetching place details:", err);
     }
@@ -73,11 +64,6 @@ function PlaceCards({ place }) {
   useEffect(() => {
     if (trip && place) getPlaceInfo();
   }, [trip, place]);
-
-  useEffect(() => {
-    const url = PHOTO_URL.replace("{replace}", photos);
-    setUrl(url);
-  }, [photos]);
 
   const containerStyle = {
     width: "100%",
@@ -99,7 +85,7 @@ function PlaceCards({ place }) {
       to={`/details-for-place/${latitude}/${longitude}`}
       onClick={handleSelectPlace}
     >
-      <Card className="border-foreground/20 p-1 h-full flex flex-col gap-3 hover:scale-105 duration-300">
+      <Card className="border-foreground/20 p-1 h-full flex flex-col gap-3 overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-xl dark:hover:shadow-primary/20">
         <div className="img h-full rounded-lg">
           <img
             src={Url || "/logo.png"}

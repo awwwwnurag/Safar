@@ -1,12 +1,17 @@
 import { useCache } from "@/Context/Cache/CacheContext";
 import React, { useEffect, useState } from "react";
-import {
-  LoadScript,
-  GoogleMap,
-  Marker,
-  useJsApiLoader,
-  Polyline,
-} from "@react-google-maps/api";
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix default icon paths if needed
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow
+});
+L.Marker.prototype.options.icon = DefaultIcon;
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { getRoute } from "@/Service/GlobalApi";
@@ -87,10 +92,8 @@ const PlacesDetails = ({ PlaceDetailsPageRef }) => {
     lng: longitude || 0,
   };
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: config.VITE_GOOGLE_MAP_API_KEY,
-    libraries: ["places", "marker"],
-  });
+  // Removed Google Maps API loader
+  const isLoaded = true;
 
   const handleSelectLocation = (location) => () => {
     setSelectedLocation(location);
@@ -217,56 +220,45 @@ const PlacesDetails = ({ PlaceDetailsPageRef }) => {
             <span className="text-gray-500 animate-pulse">Loading Map...</span>
           </div>
         ) : (
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={mapCenter}
+          <MapContainer
+            style={containerStyle}
+            center={[mapCenter.lat, mapCenter.lng]}
             zoom={15}
+            scrollWheelZoom={false}
           >
-            <Marker
-              position={{
-                lat: latitude,
-                lng: longitude,
-              }}
-              icon={{
-                path: window.google.maps.SymbolPath.CIRCLE,
-                scale: 12, // size of the marker
-                fillColor: "#black", // your custom color
-                fillOpacity: 1,
-                strokeWeight: 1,
-                strokeColor: "#ffffff", // border color
-              }}
-              label="🏨"
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {/* <Marker position={mapCenter} /> */}
+            <Marker
+              position={[latitude, longitude]}
+            >
+              <Popup>
+                🏨 {name}
+              </Popup>
+            </Marker>
+            
             {selectedLocation && (
               <>
-                {/* Draw a line between hotel and place */}
                 <Polyline
-                  path={decodedPath}
-                  options={{
-                    strokeColor: "#1E90FF",
-                    strokeOpacity: 0.8,
-                    strokeWeight: 4,
-                  }}
+                  positions={decodedPath.map(p => [p.lat, p.lng])}
+                  color="#1E90FF"
+                  weight={4}
+                  opacity={0.8}
                 />
                 <Marker
-                  position={{
-                    lat: selectedLocation.location.latitude,
-                    lng: selectedLocation.location.longitude,
-                  }}
-                  icon={{
-                    path: window.google.maps.SymbolPath.CIRCLE,
-                    scale: 12, // size of the marker
-                    fillColor: "black", // your custom color
-                    fillOpacity: 1,
-                    strokeWeight: 1,
-                    strokeColor: "#ffffff", // border color
-                  }}
-                  label="📍"
-                />
+                  position={[
+                    selectedLocation.location.latitude,
+                    selectedLocation.location.longitude,
+                  ]}
+                >
+                  <Popup>
+                    📍 {selectedLocation.name}
+                  </Popup>
+                </Marker>
               </>
             )}
-          </GoogleMap>
+          </MapContainer>
         )}
       </div>
 

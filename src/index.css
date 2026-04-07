@@ -70,6 +70,31 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  a, button {
+    @apply transition-all duration-300;
+  }
+  
+  a:active, button:active {
+    @apply scale-[0.98];
+  }
+
+  button:hover {
+    @apply ring-2 ring-blue-500/80 ring-offset-2 ring-offset-background;
+  }
+}
+
+.hover-glow {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.4);
+}
+
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: inherit;
 }
 
 ::-webkit-scrollbar{

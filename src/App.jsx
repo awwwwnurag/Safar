@@ -22,6 +22,7 @@ import HotelDetails from "./components/routes/placesDetails/HotelDetails.jsx";
 import PlacesDetails from "./components/routes/placesDetails/PlacesDetails.jsx";
 import CustomAuth from "./components/custom/CustomAuth.jsx";
 import AiTest from "./components/custom/AiTest.jsx";
+import CustomCursor from "./components/custom/CustomCursor.jsx";
 
 function App() {
   const { user, isAuthenticated } = useContext(LogInContext);
@@ -148,6 +149,7 @@ function App() {
 
   return (
     <>
+      <CustomCursor />
       <ProgressBar />
       <div className="app tracking-tighter min-w-[320px]">
         <Header headerRef={headerRef} />

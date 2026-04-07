@@ -1,5 +1,5 @@
 import { LogInContext } from "@/Context/LogInContext/Login";
-import { getCityDetails, PHOTO_URL } from "@/Service/GlobalApi";
+import { getUnsplashPhotoUrl } from "@/Service/GlobalApi";
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -56,20 +56,18 @@ function Locationinfo() {
   const randomCompliment =
     compliments[Math.floor(Math.random() * compliments.length)];
 
-  const city = trip?.tripData?.location;
+  const city = trip?.tripData?.location || trip?.userSelection?.location || trip?.location;
 
   const getCityInfo = async () => {
-    const data = {
-      textQuery: city,
-    };
-    const result = await getCityDetails(data)
-      .then((res) => {
-        setCityDets(res.data.places[0]);
-        // console.log("Res Data", res.data.places[0]);
-        setAllImages(res.data.places[0].photos);
-        setPhotos(res.data.places[0].photos[0].name);
-      })
-      .catch((err) => console.log(err));
+    try {
+      const imgUrl = await getUnsplashPhotoUrl(city + " landmark city landscape");
+      // Simulate array so carousel still works nicely
+      setAllImages([{ name: imgUrl }]);
+      setPhotos(imgUrl);
+      setUrl(imgUrl);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   useEffect(() => {
@@ -77,13 +75,9 @@ function Locationinfo() {
   }, [trip]);
 
   const getUrl = (name) => {
-    return PHOTO_URL.replace("{replace}", name);
+    // Unsplash URLs are complete, unlike Google API partial IDs
+    return name;
   };
-
-  useEffect(() => {
-    const url = PHOTO_URL.replace("{replace}", photos);
-    setUrl(url);
-  }, [photos]);
 
   function getCheckinAndCheckout_MMDDYYYY(daysToStay) {
     daysToStay = parseInt(daysToStay, 10); // 👈 fix here
@@ -139,10 +133,10 @@ function Locationinfo() {
 
   useEffect(() => {
     const { checkin, checkout } = getCheckinAndCheckout_MMDDYYYY(
-      trip?.userSelection?.noOfDays
+      trip?.userSelection?.noOfDays || trip?.days
     );
     const { adults, children, rooms } = getAdultsAndChildren(
-      trip?.userSelection?.People
+      trip?.userSelection?.People || trip?.people
     );
     setCheckInDate(checkin);
     setCheckOutDate(checkout);
@@ -204,13 +198,13 @@ function Locationinfo() {
       </h2>
       <div className="location-info flex items-center justify-center py-2 gap-2 mt-2">
         <h3 className="location-info opacity-90 bg-foreground/20 px-2 md:px-4 flex items-center justify-center rounded-md text-center text-md font-medium tracking-tight text-primary/80 md:text-lg">
-          💵 {trip?.userSelection?.Budget}
+          💵 {trip?.userSelection?.Budget || trip?.budget}
         </h3>
         <h3 className="location-info opacity-90 bg-foreground/20 px-2 md:px-4 flex items-center justify-center rounded-md text-center text-md font-medium tracking-tight text-primary/80 md:text-lg">
-          👨‍👩‍👧‍👦 {trip?.userSelection?.People}
+          👨‍👩‍👧‍👦 {trip?.userSelection?.People || trip?.people}
         </h3>
         <h3 className="location-info opacity-90 bg-foreground/20 px-2 md:px-4 flex items-center justify-center rounded-md text-center text-md font-medium tracking-tight text-primary/80 md:text-lg">
-          📆 {trip?.userSelection?.noOfDays} Day
+          📆 {trip?.userSelection?.noOfDays || trip?.days} Day
         </h3>
       </div>
     </div>

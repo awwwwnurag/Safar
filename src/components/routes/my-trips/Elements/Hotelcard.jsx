@@ -3,7 +3,7 @@ import { useMediaQuery } from "react-responsive";
 import { LogInContext } from "@/Context/LogInContext/Login";
 import HotelCards from "../Cards/HotelCards";
 import { useRefContext } from "@/Context/RefContext/RefContext";
-import { getPlaceDetails } from "@/Service/GlobalApi";
+
 import { useCache } from "@/Context/Cache/CacheContext";
 
 function Hotelcard() {
@@ -13,8 +13,20 @@ function Hotelcard() {
   const [id, setId] = useState("");
 
   const { trip } = useContext(LogInContext);
-  const city = trip?.tripData?.location;
-  const hotels = trip?.tripData?.hotels;
+  const city = trip?.tripData?.location || trip?.userSelection?.location || trip?.location;
+  
+  // Safely extract hotels from various possible JSON structures
+  let hotels = 
+    trip?.tripData?.hotelOptions || 
+    trip?.tripData?.hotels || 
+    trip?.hotelOptions || 
+    trip?.hotels || 
+    trip?.itinerary?.hotelOptions || 
+    trip?.itinerary?.hotels;
+
+  if (hotels && !Array.isArray(hotels) && typeof hotels === 'object') {
+    hotels = Object.values(hotels);
+  }
 
   const { setPlaceCache } = useCache();
 

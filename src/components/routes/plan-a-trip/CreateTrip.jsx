@@ -77,7 +77,27 @@ const CreateTrip = ({ createTripPageRef }) => {
     });
 
     try {
-      const prompt = `Create a detailed ${formData.noOfDays}-day trip itinerary for ${formData.location} with a budget of ₹${formData.Budget} for ${formData.People} people. Include specific places to visit, activities, and recommendations.`;
+      const prompt = `Generate a Travel Plan for Location : ${formData.location}, for ${formData.noOfDays} Days for ${formData.People} people with a ₹${formData.Budget} budget.
+      Return the response STRICTLY as a JSON object exactly matching this schema:
+      {
+        "summary": "A markdown-formatted summary containing: Duration, Budget, Travelers, a detailed Budget Breakdown, and Tips. Do not include daily itineraries in this string.",
+        "itinerary": [
+          {
+            "day": 1,
+            "title": "A thematic title for the day",
+            "places": [
+              {
+                "name": "Exact name of place",
+                "details": "Short description of the place",
+                "pricing": "Estimated ticket or entry cost",
+                "timings": "Operating hours",
+                "rating": 4.5
+              }
+            ]
+          }
+        ]
+      }
+      VERY IMPORTANT: You MUST generate exactly ${formData.noOfDays} items in the 'itinerary' array, covering Day 1 to Day ${formData.noOfDays}.`;
 
       console.log("Sending prompt to AI:", prompt);
       console.log("Gemini API Key:", config.VITE_GEMINI_API_KEY ? "Present" : "Missing");
@@ -99,20 +119,13 @@ const CreateTrip = ({ createTripPageRef }) => {
           throw new Error("ChatSession is not properly initialized");
         }
         
-        // Test with a simple message first
-        console.log("Testing simple AI message...");
-        const testPrompt = "Hello, can you respond with 'AI is working'?";
-        const testResult = await freshChatSession.sendMessage(testPrompt);
-        console.log("Test result:", testResult);
-        console.log("Test response:", testResult.response.text());
-        
         // Now try the actual trip generation
-        console.log("AI test successful, now generating trip...");
+        console.log("Generating trip...");
         const aiPromise = freshChatSession.sendMessage(prompt);
         const result = await Promise.race([aiPromise, timeoutPromise]);
-        console.log("AI Result:", result);
-        response = result.response.text();
-        console.log("AI Response Text:", response);
+        const aiResponseText = result.response.text();
+        response = JSON.parse(aiResponseText);
+        console.log("AI Response Object:", response);
       } catch (aiError) {
         console.log("AI failed or timed out, using fallback:", aiError);
         console.error("AI Error Details:", aiError);
@@ -151,8 +164,11 @@ const CreateTrip = ({ createTripPageRef }) => {
         console.log("Trip data to save:", tripData);
 
         const tripRef = doc(db, "Trips", `${user.sub}_${Date.now()}`);
-        await setDoc(tripRef, tripData);
-        console.log("Trip saved to Firebase successfully");
+        
+        // Don't await setDoc to prevent UI freezing if Firebase connection is blocked (e.g. by adblocker)
+        setDoc(tripRef, tripData).catch(err => console.error("Firebase save error in background:", err));
+        
+        console.log("Trip save initiated in background");
 
         toast.success("Trip generated successfully!");
         
@@ -191,30 +207,53 @@ const CreateTrip = ({ createTripPageRef }) => {
     const budget = parseInt(data.Budget);
     const people = parseInt(data.People);
     
-    let itinerary = `# ${data.location} Trip Itinerary\n\n`;
-    itinerary += `**Duration:** ${days} days\n`;
-    itinerary += `**Budget:** ₹${budget}\n`;
-    itinerary += `**Travelers:** ${people} people\n\n`;
+    let summaryText = `# ${data.location} Trip Itinerary\n\n`;
+    summaryText += `**Duration:** ${days} days\n`;
+    summaryText += `**Budget:** ₹${budget}\n`;
+    summaryText += `**Travelers:** ${people} people\n\n`;
+    summaryText += `## Budget Breakdown\n`;
+    summaryText += `- Accommodation: ₹${Math.floor(budget * 0.4)}\n`;
+    summaryText += `- Food: ₹${Math.floor(budget * 0.3)}\n`;
+    summaryText += `- Activities: ₹${Math.floor(budget * 0.2)}\n`;
+    summaryText += `- Transportation: ₹${Math.floor(budget * 0.1)}\n\n`;
+    summaryText += `## Tips\n`;
+    summaryText += `- Book accommodations in advance\n`;
+    summaryText += `- Try local street food\n`;
+    summaryText += `- Use public transportation when possible\n`;
+
+    const itineraryArray = [];
     
     for (let day = 1; day <= days; day++) {
-      itinerary += `## Day ${day}\n`;
-      itinerary += `- Morning: Explore local attractions\n`;
-      itinerary += `- Afternoon: Visit popular landmarks\n`;
-      itinerary += `- Evening: Enjoy local cuisine\n\n`;
+      itineraryArray.push({
+        day: day,
+        title: `Exploring the Best of ${data.location}`,
+        places: [
+          {
+            name: `${data.location} Central Park`,
+            details: `A beautiful and serene environment to kick off your day in ${data.location}. Perfect for a morning walk.`,
+            pricing: "Free",
+            timings: "06:00 AM - 08:00 PM",
+            rating: 4.5
+          },
+          {
+            name: `${data.location} Historical Museum`,
+            details: `Dive deep into the rich culture and history of ${data.location} with beautiful artifacts and guided tours.`,
+            pricing: "₹ 200",
+            timings: "10:00 AM - 05:00 PM",
+            rating: 4.2
+          },
+          {
+            name: `${data.location} Sunset Point Market`,
+            details: `An evening well spent exploring local crafts, delicacies, and viewing a spectacular sunset over ${data.location}.`,
+            pricing: "Varies",
+            timings: "04:00 PM - 10:00 PM",
+            rating: 4.7
+          }
+        ]
+      });
     }
     
-    itinerary += `## Budget Breakdown\n`;
-    itinerary += `- Accommodation: ₹${Math.floor(budget * 0.4)}\n`;
-    itinerary += `- Food: ₹${Math.floor(budget * 0.3)}\n`;
-    itinerary += `- Activities: ₹${Math.floor(budget * 0.2)}\n`;
-    itinerary += `- Transportation: ₹${Math.floor(budget * 0.1)}\n\n`;
-    
-    itinerary += `## Tips\n`;
-    itinerary += `- Book accommodations in advance\n`;
-    itinerary += `- Try local street food\n`;
-    itinerary += `- Use public transportation when possible\n`;
-    
-    return itinerary;
+    return { summary: summaryText, itinerary: itineraryArray };
   };
 
   // Helper function to save trip to Firebase
@@ -231,7 +270,9 @@ const CreateTrip = ({ createTripPageRef }) => {
       };
 
       const tripRef = doc(db, "Trips", `${user.sub}_${Date.now()}`);
-      await setDoc(tripRef, tripData);
+      
+      // Don't await setDoc to prevent UI freezing
+      setDoc(tripRef, tripData).catch(err => console.error("Firebase save error in background:", err));
 
       toast.success("Fallback trip generated successfully!");
       

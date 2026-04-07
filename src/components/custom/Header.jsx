@@ -28,7 +28,7 @@ function Header({headerRef}) {
   return (
     <div
       ref={headerRef}
-      className="w-full flex items-center justify-between shadow-sm p-3 md:px-40 border-b"
+      className="w-full flex items-center justify-between shadow-sm p-3 md:px-40 border-b sticky top-0 z-50 bg-background/80 backdrop-blur-md"
     >
       <Link to={"/"}>
         <div className="flex items-center space-x-3">

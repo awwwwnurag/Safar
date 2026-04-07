@@ -1,26 +1,61 @@
 import axios from "axios";
 import { config } from "../config.js";
 
-const BASE_URL = "https://places.googleapis.com/v1/places:searchText";
+// Fetch an image from Unsplash
+export const getUnsplashPhotoUrl = async (query) => {
+  try {
+    const response = await axios.get("https://api.unsplash.com/search/photos", {
+      params: {
+        query: query,
+        per_page: 1,
+        orientation: "landscape",
+      },
+      headers: {
+        Authorization: `Client-ID ${config.VITE_UNSPLASH_API_KEY}`,
+      },
+    });
 
-const headers = {
-  "Content-Type": "application/json",
-  "X-Goog-Api-Key": config.VITE_GOOGLE_MAP_API_KEY,
-  "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.location,places.types,places.photos,places.rating,places.userRatingCount,places.priceLevel,places.websiteUri,places.regularOpeningHours,places.editorialSummary",
+    if (response.data.results && response.data.results.length > 0) {
+      return response.data.results[0].urls.regular;
+    }
+    // Fallback image if no results
+    return "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=1000";
+  } catch (error) {
+    console.error("Error fetching Unsplash photo:", error);
+    // Fallback generic travel image
+    return "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=1000";
+  }
 };
 
-export const PHOTO_URL =
-  "https://places.googleapis.com/v1/{replace}/media?maxHeightPx=1000&key=" +
-  config.VITE_GOOGLE_MAP_API_KEY;
+// Geocoding using free Nominatim (OpenStreetMap) API
+export const getNominatimCoordinates = async (query) => {
+  try {
+    const response = await axios.get("https://nominatim.openstreetmap.org/search", {
+      params: {
+        q: query,
+        format: "json",
+        limit: 1,
+      },
+    });
 
-export const getPlaceDetails = (data) =>
-  axios.post(BASE_URL, data, { headers });
-
-export const getCityDetails = (data) => 
-  axios.post(BASE_URL, data, { headers });
+    if (response.data && response.data.length > 0) {
+      return {
+        lat: parseFloat(response.data[0].lat),
+        lng: parseFloat(response.data[0].lon),
+        address: response.data[0].display_name
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching geocoding data:", error);
+    return null;
+  }
+};
 
 export const getRoute = async (origin, destination) => {
   try {
+    // If backend route requires Google Maps, this will fail. We should ideally use OSRM here if possible,
+    // but we'll try to preserve the existing backend call for now just in case the backend uses something else.
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/get-route`, {
       method: 'POST',
       headers: {

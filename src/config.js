@@ -5,13 +5,16 @@ export const config = {
   // Auth0 Configuration (Already filled)
   VITE_DOMAIN_NAME: "dev-q5wbcxuzlerglwix.us.auth0.com",
   VITE_AUTH0_CLIENT_ID: "WG9X880i08qzMaGaGEwjRhzgg7aGHeJJ",
-  
-  // Google Maps API Key (Required for maps and location features)
-  VITE_GOOGLE_MAP_API_KEY: "your-google-maps-api-key-here",
-  
+
+  // Google Maps API Key (Optional now that we use OSM)
+  VITE_GOOGLE_MAP_API_KEY: "AIzaSyCBiFA-0xKy2FmxDNhrFpzCEYPFF4l2XhY",
+
+  // Unsplash API Key (Required for free location and hotel photography)
+  VITE_UNSPLASH_API_KEY: "JOqdrRgen06qFJi4qH9DU_2npNWRvHFp9Lcpe6KnDow",
+
   // Gemini AI API Key (Required for AI trip planning)
-  VITE_GEMINI_API_KEY: "AIzaSyAAl-cBA_e7BYRoSKZDilwNsUy9JLu8G6c",
-  
+  VITE_GEMINI_API_KEY: "AIzaSyDaXDsmn2Nuuei7vIHsQ2dqEp_SKBqukZ0",
+
   // Firebase Configuration (Required for database and storage)
   VITE_FIREBASE_API_KEY: "AIzaSyAbyZVPrpWhWAhKPFq1UxoOL3-nQ-luHw4",
   VITE_FIREBASE_AUTH_DOMAIN: "safar-25.firebaseapp.com",
